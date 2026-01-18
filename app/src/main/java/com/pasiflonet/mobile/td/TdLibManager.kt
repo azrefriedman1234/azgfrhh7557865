@@ -141,8 +141,8 @@ object TdLibManager {
         }
     }
 
-        private fun containsUrl(text: String): Boolean {
-        val r = Regex("(?i)\b(https?://|www\.|t\.me/)")
+    private fun containsUrl(text: String): Boolean {
+        val r = Regex("(?i)\\b(https?://|www\\.|t\\.me/)")
         return r.containsMatchIn(text)
     }
 

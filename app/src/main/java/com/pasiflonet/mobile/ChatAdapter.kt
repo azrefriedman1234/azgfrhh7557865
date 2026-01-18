@@ -4,8 +4,8 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.pasiflonet.mobile.databinding.ItemMessageRowBinding
-import com.pasiflonet.mobile.utils.TextSanitizer
 import com.pasiflonet.mobile.td.TdLibManager
+import com.pasiflonet.mobile.utils.TextSanitizer
 import org.drinkless.tdlib.TdApi
 import java.io.File
 import java.text.SimpleDateFormat
@@ -75,14 +75,13 @@ class ChatAdapter(
 
     private fun extractText(m: TdApi.Message): String {
         val raw = when (val c = m.content) {
-            is TdApi.MessageText -> c.text?.text ?: ""
-            is TdApi.MessagePhoto -> c.caption?.text ?: ""
-            is TdApi.MessageVideo -> c.caption?.text ?: ""
-            is TdApi.MessageDocument -> c.caption?.text ?: ""
-            else -> ""
+            is TdApi.MessageText -> c.text.text
+            is TdApi.MessagePhoto -> c.caption.text.ifBlank { "(image)" }
+            is TdApi.MessageVideo -> c.caption.text.ifBlank { "(video)" }
+            is TdApi.MessageAnimation -> c.caption.text.ifBlank { "(animation)" }
+            is TdApi.MessageDocument -> c.caption.text.ifBlank { "(document)" }
+            else -> "(message)"
         }
-        return TextSanitizer.cleanIncomingText(raw)
-    }
         return TextSanitizer.cleanIncomingText(raw)
     }
 
@@ -100,7 +99,7 @@ class ChatAdapter(
             } catch (_: Exception) { 0L }
         }
 
-        val raw = when (val c = m.content) {
+        return when (val c = m.content) {
             is TdApi.MessagePhoto -> {
                 val best = c.photo.sizes.maxByOrNull { it.width * it.height }
                 val f = best?.photo
