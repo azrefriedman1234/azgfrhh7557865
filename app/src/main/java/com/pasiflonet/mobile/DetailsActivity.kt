@@ -282,11 +282,12 @@ b.btnSend.setOnClickListener { performStrictSend() }
                     )
                 } catch (_: Exception) {}
 
+                val editedText = b.etCaption.text?.toString() ?: ""
                 CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
                     val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
                     val signature = prefs.getString("signature_text", "") ?: ""
 
-                    val cleaned = TextSanitizer.cleanIncomingText(textToSend)
+                    val cleaned = TextSanitizer.cleanIncomingText(editedText)
                     val translated =
                         if (cleaned.isBlank()) "" else TranslationManager.translateToEnglish(cleaned)
 
