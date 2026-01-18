@@ -47,15 +47,23 @@ class SettingsActivity : BaseActivity() {
             val currentTarget = prefs.getString("target_username", "")
             val currentLogo = prefs.getString("logo_uri", "")
 
+            val currentSig = prefs.getString("signature_text", "")
+
             if (!currentTarget.isNullOrEmpty()) b.etTargetUsername.setText(currentTarget)
+            if (!currentSig.isNullOrEmpty()) b.etSignature.setText(currentSig)
             if (!currentLogo.isNullOrEmpty()) {
                 try { b.ivCurrentLogo.setImageURI(Uri.parse(currentLogo)) } catch (e: Exception) {}
             }
 
             b.btnSaveSettings.setOnClickListener {
-                val target = b.etTargetUsername.text.toString()
+                val targetInput = b.etTargetUsername.text.toString().trim()
+                val signature = b.etSignature.text?.toString() ?: ""
+                val target = if (targetInput.isNotEmpty()) targetInput else (prefs.getString("target_username", "") ?: "")
                 if (target.isNotEmpty()) {
-                    prefs.edit().putString("target_username", target).apply()
+                    prefs.edit()
+                        .putString("target_username", target)
+                        .putString("signature_text", signature)
+                        .apply()
                     Toast.makeText(this, "Saved!", Toast.LENGTH_SHORT).show()
                     finish()
                 } else {

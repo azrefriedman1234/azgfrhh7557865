@@ -20,6 +20,8 @@ import com.pasiflonet.mobile.td.TdLibManager
 import com.pasiflonet.mobile.utils.MediaProcessor
 import com.pasiflonet.mobile.utils.ImageUtils
 import com.pasiflonet.mobile.utils.TranslationManager
+import com.pasiflonet.mobile.utils.TextSanitizer
+import kotlinx.coroutines.runBlocking
 import com.pasiflonet.mobile.utils.BlurRect
 import kotlinx.coroutines.*
 import java.io.File
@@ -56,7 +58,7 @@ class DetailsActivity : BaseActivity() {
         thumbId = intent.getIntExtra("THUMB_ID", 0)
         
         val passedThumbPath = intent.getStringExtra("THUMB_PATH")
-        b.etCaption.setText(intent.getStringExtra("CAPTION") ?: "")
+        b.etCaption.setText(TextSanitizer.cleanIncomingText(intent.getStringExtra("CAPTION") ?: ""))
 
         if (passedThumbPath != null && File(passedThumbPath).exists()) {
             loadPreview(passedThumbPath)
@@ -281,8 +283,28 @@ b.btnSend.setOnClickListener { performStrictSend() }
                 } catch (_: Exception) {}
 
                 CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
-                    // TdLibManager already supports filePath=null -> InputMessageText
-                    TdLibManager.sendFinalMessage(target, textToSend, null, false)
+                    val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+                    val signature = prefs.getString("signature_text", "") ?: ""
+
+                    val cleaned = TextSanitizer.cleanIncomingText(textToSend)
+                    val translated =
+                        if (cleaned.isBlank()) "" else TranslationManager.translateToEnglish(cleaned)
+
+                    val finalText =
+                        if (signature.isNotBlank()) {
+                            if (translated.isBlank()) signature.trim()
+                            else translated.trimEnd() + "\n" + signature.trim()
+                        } else {
+                            translated
+                        }
+
+                    if (finalText.isBlank()) {
+                        safeToast("אין טקסט לשליחה")
+                        runOnUiThread { try { b.btnSend.isEnabled = true } catch (_: Exception) {} }
+                        return@launch
+                    }
+
+                    TdLibManager.sendFinalMessage(target, finalText, null, false)
                 }
                 return
             }
@@ -378,7 +400,24 @@ var logoUri: Uri? = null
                 }
 
                 if (success && File(outPath).exists() && File(outPath).length() > 0) {
-                    TdLibManager.sendFinalMessage(target, caption, outPath, isVideo)
+                    runBlocking {
+                        val prefs2 = getSharedPreferences("app_prefs", MODE_PRIVATE)
+                        val signature2 = prefs2.getString("signature_text", "") ?: ""
+
+                        val cleanedCaption = TextSanitizer.cleanIncomingText(caption)
+                        val translatedCaption =
+                            if (cleanedCaption.isBlank()) "" else TranslationManager.translateToEnglish(cleanedCaption)
+
+                        val finalCaption =
+                            if (signature2.isNotBlank()) {
+                                if (translatedCaption.isBlank()) signature2.trim()
+                                else translatedCaption.trimEnd() + "\n" + signature2.trim()
+                            } else {
+                                translatedCaption
+                            }
+
+                        TdLibManager.sendFinalMessage(target, finalCaption, outPath, isVideo)
+                    }
                     safeToast("✅ נשלח")
                     runOnUiThread { try { finish() } catch (_: Exception) {} }
                 } else {

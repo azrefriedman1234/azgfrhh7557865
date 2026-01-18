@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.pasiflonet.mobile.databinding.ItemMessageRowBinding
+import com.pasiflonet.mobile.utils.TextSanitizer
 import com.pasiflonet.mobile.td.TdLibManager
 import org.drinkless.tdlib.TdApi
 import java.io.File
@@ -73,7 +74,7 @@ class ChatAdapter(
     }
 
     private fun extractText(m: TdApi.Message): String {
-        return when (val c = m.content) {
+        val raw = when (val c = m.content) {
             is TdApi.MessageText -> c.text.text
             is TdApi.MessagePhoto -> c.caption.text.ifBlank { "(image)" }
             is TdApi.MessageVideo -> c.caption.text.ifBlank { "(video)" }
@@ -81,6 +82,7 @@ class ChatAdapter(
             is TdApi.MessageDocument -> c.caption.text.ifBlank { "(document)" }
             else -> "(message)"
         }
+        return TextSanitizer.cleanIncomingText(raw)
     }
 
     private fun extractSizeHuman(m: TdApi.Message): String {
@@ -97,7 +99,7 @@ class ChatAdapter(
             } catch (_: Exception) { 0L }
         }
 
-        return when (val c = m.content) {
+        val raw = when (val c = m.content) {
             is TdApi.MessagePhoto -> {
                 val best = c.photo.sizes.maxByOrNull { it.width * it.height }
                 val f = best?.photo

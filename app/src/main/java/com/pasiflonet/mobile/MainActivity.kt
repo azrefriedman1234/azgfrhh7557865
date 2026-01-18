@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.pasiflonet.mobile.databinding.ActivityMainBinding
+import com.pasiflonet.mobile.utils.TextSanitizer
 import com.pasiflonet.mobile.td.TdLibManager
 import com.pasiflonet.mobile.utils.KeepAliveService
 import kotlinx.coroutines.Dispatchers
@@ -114,7 +115,7 @@ class MainActivity : BaseActivity() {
             intent.putExtra("THUMB_ID", thumbId)
             intent.putExtra("FILE_ID", fullId)
             intent.putExtra("IS_VIDEO", isVideo)
-            intent.putExtra("CAPTION", caption)
+            intent.putExtra("CAPTION", TextSanitizer.cleanIncomingText(caption))
             startActivity(intent)
         }
         

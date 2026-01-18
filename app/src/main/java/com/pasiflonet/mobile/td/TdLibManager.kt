@@ -141,7 +141,12 @@ object TdLibManager {
         }
     }
 
-    // ===== שליחה: overload לתאימות אם מועבר Boolean
+        private fun containsUrl(text: String): Boolean {
+        val r = Regex("(?i)\b(https?://|www\.|t\.me/)")
+        return r.containsMatchIn(text)
+    }
+
+// ===== שליחה: overload לתאימות אם מועבר Boolean
     fun sendFinalMessage(targetUsername: String, caption: String, filePath: String?, silent: Boolean) {
         sendFinalMessage(targetUsername, caption, filePath) { /* ignore */ }
     }
@@ -169,7 +174,11 @@ object TdLibManager {
 
             val content: TdApi.InputMessageContent =
                 if (filePath.isNullOrBlank()) {
-                    TdApi.InputMessageText(TdApi.FormattedText(caption, null), null, false)
+                    TdApi.InputMessageText(
+                        TdApi.FormattedText(caption, null),
+                        if (containsUrl(caption)) TdApi.LinkPreviewOptions(true, "", false, false, false) else null,
+                        false
+                    )
                 } else {
                     val f = File(filePath)
                     val input = TdApi.InputFileLocal(f.absolutePath)

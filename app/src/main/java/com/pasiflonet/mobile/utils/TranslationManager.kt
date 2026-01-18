@@ -52,6 +52,45 @@ object TranslationManager {
         }
     }
 
+    suspend fun translateToEnglish(text: String): String {
+        return withContext(Dispatchers.IO) {
+            try {
+                val encodedText = URLEncoder.encode(text, "UTF-8")
+                val urlStr =
+                    "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=t&q=$encodedText"
+
+                val url = URL(urlStr)
+                val conn = url.openConnection() as HttpURLConnection
+
+                conn.setRequestProperty(
+                    "User-Agent",
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"
+                )
+
+                conn.requestMethod = "GET"
+                conn.connectTimeout = 5000
+                conn.readTimeout = 5000
+
+                val responseCode = conn.responseCode
+                if (responseCode == 200) {
+                    val reader = BufferedReader(InputStreamReader(conn.inputStream))
+                    val response = StringBuilder()
+                    var line: String?
+                    while (reader.readLine().also { line = it } != null) {
+                        response.append(line)
+                    }
+                    reader.close()
+                    parseGoogleResponse(response.toString())
+                } else {
+                    text
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                text
+            }
+        }
+    }
+
     private fun parseGoogleResponse(jsonStr: String): String {
         try {
             // המבנה של גוגל הוא מערך בתוך מערך
