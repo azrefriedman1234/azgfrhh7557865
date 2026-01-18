@@ -75,13 +75,14 @@ class ChatAdapter(
 
     private fun extractText(m: TdApi.Message): String {
         val raw = when (val c = m.content) {
-            is TdApi.MessageText -> c.text.text
-            is TdApi.MessagePhoto -> c.caption.text.ifBlank { "(image)" }
-            is TdApi.MessageVideo -> c.caption.text.ifBlank { "(video)" }
-            is TdApi.MessageAnimation -> c.caption.text.ifBlank { "(animation)" }
-            is TdApi.MessageDocument -> c.caption.text.ifBlank { "(document)" }
-            else -> "(message)"
+            is TdApi.MessageText -> c.text?.text ?: ""
+            is TdApi.MessagePhoto -> c.caption?.text ?: ""
+            is TdApi.MessageVideo -> c.caption?.text ?: ""
+            is TdApi.MessageDocument -> c.caption?.text ?: ""
+            else -> ""
         }
+        return TextSanitizer.cleanIncomingText(raw)
+    }
         return TextSanitizer.cleanIncomingText(raw)
     }
 

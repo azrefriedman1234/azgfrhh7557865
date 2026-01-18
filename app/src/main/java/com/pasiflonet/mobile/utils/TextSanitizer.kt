@@ -2,20 +2,21 @@ package com.pasiflonet.mobile.utils
 
 object TextSanitizer {
 
+    // Remove common URL formats (http/https/www/t.me/telegram.me/tg://)
     private val urlRegex = Regex(
-        "(?i)\b((https?://\S+)|(www\.\S+)|(t\.me/\S+)|(telegram\.me/\S+)|(tg://\S+))"
+        "(?i)\\b((https?://\\S+)|(www\\.\\S+)|(t\\.me/\\S+)|(telegram\\.me/\\S+)|(tg://\\S+))"
     )
 
     // Best-effort emoji remover (surrogate-pair emojis + symbols + VS + ZWJ)
     private val emojiRegex = Regex(
         "(" +
-            "[\uD83C-\uDBFF][\uDC00-\uDFFF]" +
+            "[\\uD83C-\\uDBFF][\\uDC00-\\uDFFF]" +
             "|" +
-            "[\u2600-\u27BF]" +
+            "[\\u2600-\\u27BF]" +
             "|" +
-            "[\uFE0E\uFE0F]" +
+            "[\\uFE0E\\uFE0F]" +
             "|" +
-            "[\u200D]" +
+            "[\\u200D]" +
         ")"
     )
 
